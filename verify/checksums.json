@@ -15,7 +15,7 @@
       "public": 0.91834,
       "private": 0.92237,
       "submitted_utc": "2026-09-20T12:58:45Z",
-      "built_by": "engine_a/scripts/534_b_mil_candidate.py"
+      "built_by": "pipeline/scripts/534_b_mil_candidate.py"
     },
     "hybrid_riskA_behB_evMIL.csv": {
       "role": "second final",
@@ -23,7 +23,7 @@
       "public": 0.91112,
       "private": 0.91281,
       "submitted_utc": "2026-09-20T20:23:51Z",
-      "built_by": "engine_a/scripts/608_build_hybrid_riskA.py"
+      "built_by": "pipeline/scripts/608_build_hybrid_riskA.py"
     }
   },
   "inputs_to_the_finals": {

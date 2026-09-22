@@ -13,10 +13,13 @@ specific opponent differently from everyone else at the table. Everything we use
 derived from `hands`, `seats` and `actions`. Identifiers, row order, file order and
 player metadata are never read.
 
-Two independent pipelines merged into one team on 19 September: engine A
-(`engine_a/`) and engine B (`engine_b/`). The submitted file is engine B's risk and
-behaviour columns with an evidence column that engine A's method produced inside
-engine B's tables. Both are here.
+The team is two people who worked **independently until the last days** — no shared
+code, no shared features, no shared diagnostics — so that neither of us collapsed the
+other's reading of the problem into his own. Two complete pipelines came out of that,
+engine A and engine B, and they merged on 19 September within 0.0013 of each other on
+the board. The submitted file is engine B's risk and behaviour columns with an
+evidence column engine A's method produced inside engine B's tables and folds. Both
+are in the repository, as one pipeline.
 
 ## Engine B — the pair, behaviour and evidence columns
 
@@ -135,8 +138,9 @@ inside the range, and by that rule became the second final.
 
 `python run_all.py --list` prints every stage and whether its output exists;
 `--dry-run` prints the plan. The default run rebuilds v64's risk column, the MIL
-evidence column, both selected files and their checksums; `--with-engine-b` rebuilds
+evidence column, both selected files and their checksums; `--with-base` rebuilds
 v55 first. Setup, hardware, runtimes and what is and is not rebuilt here are in the
 [README](README.md).
 
-*(About 1,340 words, inside the 1,500-word limit.)*
+The two chains, what each reached alone, and every file submitted after they
+merged: [`docs/TWO_CHAINS.md`](docs/TWO_CHAINS.md).

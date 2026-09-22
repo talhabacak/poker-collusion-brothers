@@ -1,12 +1,5 @@
-# Environment that built both selected submissions (engine A's stages, and engine B's
-# reranker when stage 533 drives it as a subprocess). Python 3.13.9 on Windows 11.
-#
-# One caveat, recorded rather than smoothed over: the manifest of the 18 September
-# full-pipeline run lists lightgbm 4.7.0, and the environment as it stands today
-# reports 4.6.0. Gradient-boosting libraries can change the last digits of a score
-# between minor versions without changing a ranking, so a rebuild under one of them
-# may match the other in ranking but not in sha256. `verify/check_submissions.py`
-# reports both.
+# The environment that built both selected submissions. Python 3.13.9 on Windows 11,
+# 20 threads. One environment runs the whole repository.
 polars==1.43.2
 numpy==2.3.5
 scipy==1.16.3
@@ -21,3 +14,18 @@ pytest==8.4.2
 # The action-level MIL head (stages 531-534). A CUDA build was used; the head is small
 # and runs on CPU, which changes the arithmetic order and therefore the last digits.
 torch==2.11.0
+
+# Two version notes, recorded rather than smoothed over.
+#
+# 1. The manifest of the 18 September full-pipeline run lists lightgbm 4.7.0 and the
+#    environment as it stands today reports 4.6.0. A gradient-boosting library can
+#    change the last digits of a score between minor versions without changing a
+#    ranking, and the metric reads only rankings, so a rebuild may match in ranking
+#    but not in sha256. verify/check_submissions.py reports both.
+#
+# 2. The base chain (stages 01-05b, which build v55) was developed under its own pins,
+#    newer than the ones above:
+#      lightgbm==4.7.0  numpy==2.5.3  polars==1.44.2  scikit-learn==1.9.1
+#      scipy==1.18.1    pandas==3.0.5  pyarrow==25.0.1  treys==0.1.8   (Python 3.12)
+#    Those are the versions its recorded readings were measured under. Everything
+#    downstream of v55 was built under the pins at the top of this file.

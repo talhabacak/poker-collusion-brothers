@@ -48,7 +48,7 @@ Each stage shuffled whatever list of tables it had been handed, so a stage that 
 only labelled tables placed 339 of 397 of them in a different fold from a stage that
 saw all 400 — and supervised caches were then validated on folds their own training
 rows belonged to. One canonical map, keyed by fold count and seed
-(`engine_a/src/pokercol/cv.py::canonical_fold_map`), removed it, and removed 0.011 of
+(`pipeline/src/pokercol/cv.py::canonical_fold_map`), removed it, and removed 0.011 of
 the evidence engine's apparent gain with it.
 
 ## 3. Leave-one-family-out scoring dropped the family it held out

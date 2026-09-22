@@ -13,10 +13,12 @@ counts, so two strong candidates that differ on both axes are worth more than tw
 views of one. Whether it earns the slot is decided by stage 155 against v62's
 feature set, before this runs.
 
-    python scripts/156_generate_v64_union_oppaware.py
-    python scripts/build_combo.py --risk _risk_v64_union_oppaware.csv --guard none \
-        --evidence _evidence_t8_s12.csv --out v64_union_oppaware_risk.csv
-    python scripts/08_validate_submission.py submissions/v64_union_oppaware_risk.csv
+    python pipeline/scripts/156_generate_v64_union_oppaware.py
+
+REPO NOTE: during the competition this column was then carried into a full submission
+by `build_combo.py`, which attached an evidence and a behaviour column. Neither
+selected file uses those columns - stage 608 reads the risk column straight from this
+script's output - so build_combo is not part of this reproduction repository.
 """
 from __future__ import annotations
 

@@ -35,10 +35,11 @@ from pokercol import config as C
 
 s08 = importlib.import_module("08_validate_submission")
 MIL = C.SUBMISSIONS / "tarik_v55_mil_evidence.csv"
-# REPO NOTE: `v64_union_oppaware_risk.csv` is stage 156's risk column carried through
-# build_combo, which also attaches an evidence and behaviour column this file throws
-# away. Both files hold byte-identical risk text, so the repository defaults to 156's
-# own output and uses the combined file when it is there. --risk overrides both.
+# REPO NOTE: during the competition the risk column reached this file inside
+# `v64_union_oppaware_risk.csv`, a full submission whose evidence and behaviour columns
+# this stage throws away. The risk text in it is byte-identical to stage 156's own
+# output, verified row by row, so the repository reads 156's output directly and uses
+# the competition-era file only if someone puts it here. --risk overrides both.
 _COMBINED = C.SUBMISSIONS / "v64_union_oppaware_risk.csv"
 _RISK_ONLY = C.SUBMISSIONS / "_risk_v64_union_oppaware.csv"
 V64 = _COMBINED if _COMBINED.exists() else _RISK_ONLY

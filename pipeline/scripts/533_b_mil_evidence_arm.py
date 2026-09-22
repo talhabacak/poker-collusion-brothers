@@ -48,10 +48,10 @@ from pokercol import config as C
 
 INTERIM = Path(os.environ.get("TARIK_INTERIM", ""))
 RUN = Path(os.environ.get("TARIK_RUN", INTERIM.parent.parent if INTERIM.name == "interim" else ""))
-# REPO NOTE: engine B sat at the root of its own tree during the competition, so the
-# harness was "src/05b_mil.py" relative to TARIK_RUN. Here TARIK_RUN is this
-# repository and engine B is a subdirectory of it; TARIK_HARNESS overrides the path.
-HARNESS = os.environ.get("TARIK_HARNESS", "engine_b/src/05b_mil.py")
+# REPO NOTE: the evidence chain sat at the root of its own tree during the
+# competition, so the harness was "src/05b_mil.py" relative to TARIK_RUN. Here
+# TARIK_RUN is the repository root; TARIK_HARNESS overrides the path.
+HARNESS = os.environ.get("TARIK_HARNESS", "pipeline/scripts/05b_mil.py")
 BLOCKS = INTERIM / "533_blocks"
 REPORT = C.ARTIFACTS / "533_b_mil_evidence_arm.json"
 N_FOLDS = 5
