@@ -95,6 +95,16 @@ taken in the risk chain, whose development evidence metric was later measured as
 project's clearest lesson and it is stated in full in
 [`MEASUREMENT_NOTES.md`](MEASUREMENT_NOTES.md).
 
+## Provenance of the base chain's files
+
+Its stages come from commit `823dce0` on the branch the base chain was developed on —
+the commit whose message is "Opponent-aware policy residuals: 0.90858 -> 0.91748" —
+and its own run script is included as [`run_A3.sh`](run_A3.sh). Every flag the `base`
+phase of `run_all.py` sets is read out of that script rather than inferred, which
+matters for one of them: `USE_OC=1` turns on the opponent-conditioned residuals *in
+the pair model*, and the working copy used for the cross-engine measurements predates
+the code that reads it.
+
 ## What the reviewer sees in this repository
 
 The selected files need the base chain (for v55's risk and behaviour columns, and for

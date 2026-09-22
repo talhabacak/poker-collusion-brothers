@@ -141,17 +141,22 @@ Being exact about this is more useful to a reviewer than a blanket claim.
 (`hybrid`). The last two assert byte identity of the columns they carry through, and
 `verify` compares both results against the sha256 of the submitted files.
 
-**Reproduced under one caveat: v55 (the `base` phase).** The code is here and the run
-order is the phase itself, with the flags recorded from `run_A3.sh` — the script that
-built the 0.91748 file — and the clean-chain settings its pair side inherits:
-`USE_OA=1` on the pair model, `USE_OAH=1 USE_OCH=1` and six reranker seeds on the
-evidence side, `U_WEIGHT=0 MIXED_NEG_W=0`, and the fourth-family rule off. What was
-verified on this machine is the *evidence* side of that chain: rebuilt from those
-flags in a clean tree it reproduced its recorded development readings exactly
-(0.66085 for the v55 configuration, 0.65164 for the baseline arm, maximum absolute
-difference 0.0 against the original out-of-fold dumps). The v55 file itself was
-produced on its author's machine and is included byte for byte, so every stage after
-it is exactly reproducible regardless.
+**Reproduced under one caveat: v55 (the `base` phase).** The run order and every flag
+in this phase are `docs/run_A3.sh` — the script in commit `823dce0`
+("Opponent-aware policy residuals: 0.90858 -> 0.91748") that built the file — copied
+across rather than reconstructed: `U_WEIGHT=0.0 MIXED_NEG_W=0 USE_VAL=0 USE_CT=0
+USE_CTR=0 USE_OA=1 USE_OC=1 OA_COLS=""` on the pair model, `USE_OAH=1 USE_OCH=1` with
+six reranker seeds on the evidence side. The stage files themselves are that commit's,
+byte for byte, except `01_prep.py`, which carries a structural patch for Windows
+described in `pipeline/README.md`. The script also produced a fourth-family variant of
+the file; v55 is the one without it, and that is what the phase ends on.
+
+What has *not* been done on this machine is a full rerun of that chain with a byte
+comparison against v55. What was checked is its evidence side: rebuilt from these
+flags in a clean tree it reproduced its recorded development readings exactly (0.66085
+for the v55 configuration, 0.65164 for the baseline arm, maximum absolute difference
+0.0 against the original out-of-fold dumps). The v55 file itself is included byte for
+byte, so every stage after it is exactly reproducible regardless.
 
 **Library versions.** The manifest of an earlier full run records lightgbm 4.7.0 while
 the environment that built the finals reports 4.6.0, and the base chain was developed

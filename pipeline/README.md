@@ -15,6 +15,14 @@ stage of each. The run order below, not the file name, is what matters.
 *Written by Tarık Bacak, independently of the risk chain below; see*
 *[`../docs/TWO_CHAINS.md`](../docs/TWO_CHAINS.md).*
 
+These files are taken from commit `823dce0`, the commit that built v55 — not from
+the working copy used for the earlier cross-engine measurements, whose pair model
+predates the `USE_OC` block and would silently ignore the opponent-conditioned
+residuals. `05_pair_risk_behaviour.py` is that commit's `src/05_pair_model.py`,
+renamed because the risk chain also has a `05_pair_model.py`; nothing else about it
+changed. The flags every stage runs under are in [`../docs/run_A3.sh`](../docs/run_A3.sh),
+the author's own script, included here verbatim.
+
 | stage | writes |
 |---|---|
 | `01_prep.py` | ids, preflop equity, postflop strength, action context, player style |

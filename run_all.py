@@ -59,11 +59,12 @@ V55 = "tarik_v55_best.csv"
 PHASES = ("base", "risk", "mil", "hybrid", "verify")
 DEFAULT_PHASES = ("risk", "mil", "hybrid", "verify")
 
-# The v55 configuration: the evidence-side flags as recorded in run_A3.sh (the commit
-# that scored 0.91748) and the clean-chain settings its pair side inherits.
+# The v55 configuration, taken verbatim from `docs/run_A3.sh` - the script in commit
+# 823dce0 ("Opponent-aware policy residuals: 0.90858 -> 0.91748") that built the file.
 BASE_ENV = {"USE_VAL": "0", "USE_CT": "0", "USE_CTR": "0", "PYTHONUNBUFFERED": "1",
             "PYTHONIOENCODING": "utf-8"}
 RERANK_SEEDS = "42,7,2024,11,99,5"
+V55_BASE = "submission_v55_base.csv"
 
 
 @dataclass
@@ -111,16 +112,15 @@ STAGES: list[Stage] = [
           "within-pair evidence ranker on pair-normalised features",
           ("data/interim/stage1b",), env={**BASE_ENV, "FAMILY_SOURCE": "model"}),
     Stage("base11", "base", f"{SCRIPTS}/05_pair_risk_behaviour.py",
-          "the pair risk and behaviour columns (opponent-aware block on)",
-          ("submission_v55_pairs.csv",),
+          "the pair risk and behaviour columns (both opponent blocks on)",
+          (V55_BASE,),
           env={**BASE_ENV, "U_WEIGHT": "0.0", "MIXED_NEG_W": "0", "USE_OA": "1",
-               "DUMP_DEV": "1", "DUMP_ALL": "1", "BEH_LOFO": "1",
-               "SUB_OUT": "submission_v55_pairs.csv"}),
+               "USE_OC": "1", "OA_COLS": "", "SUB_OUT": V55_BASE}),
     Stage("base12", "base", f"{SCRIPTS}/05b_evidence_reranker.py",
           "evidence reranker, six seeds, opponent-aware and opponent-conditioned blocks on",
           (f"submissions/{V55}",),
           env={**BASE_ENV, "USE_OAH": "1", "USE_OCH": "1", "RERANK_SEEDS": RERANK_SEEDS,
-               "RERANK_IN": "submission_v55_pairs.csv", "RERANK_OUT": f"submissions/{V55}"}),
+               "RERANK_IN": V55_BASE, "RERANK_OUT": f"submissions/{V55}"}),
     Stage("base13", "base", f"{SCRIPTS}/06_validate_submission.py",
           "the base chain's own validator", (), args=(f"submissions/{V55}",), env=BASE_ENV),
 

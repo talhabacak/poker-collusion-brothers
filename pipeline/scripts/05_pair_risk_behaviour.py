@@ -91,6 +91,10 @@ def pair_features(H):
         if keep: O = O.select('p', 'q', 'is_eval', *keep.split(','))
         F = F.join(O, on=['p', 'q', 'is_eval'], how='left').with_columns(
             [pl.col(c).fill_null(0.0) for c in O.columns if c.startswith('oa_')])
+    if os.environ.get('USE_OC', '0') == '1':   # step 15: opponent-CONDITIONED residuals
+        Q = pl.read_parquet(OUT + 'oppcond_pair.parquet')
+        F = F.join(Q, on=['p', 'q', 'is_eval'], how='left').with_columns(
+            [pl.col(c).fill_null(0.0) for c in Q.columns if c.startswith('oc_')])
     if os.environ.get('USE_CTR', '0') == '1':   # step 9b: does the partner help this player more than the player's other opponents do
         R = pl.read_parquet(OUT + 'ct_relational.parquet')
         keep = os.environ.get('CTR_COLS', '')        # all twelve overfit 1,860 labelled pairs; a two-feature subset is the alternative
@@ -207,21 +211,7 @@ if os.environ.get('BEH_LOFO') == '1':
     for thr in [0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99]:
         rec = [float((po < thr).mean()) for _, _, po in rows]; fp = [float((pi < thr).mean()) for _, pi, _ in rows]
         print(f'{thr:6.2f} ' + ' '.join(f'{r:12.3f}' for r in rec) + f' {np.mean(rec):14.3f} {np.mean(fp):14.3f}')
-    print('(2-class head: probabilities are more confident than the 3-class head, so read thresholds relatively)')
-    # ADDED BY STAGE 442 (team merge): the same separation reading the other pipeline's LOFO
-    # takes, so the two behaviour heads can be compared on one number instead of on two
-    # threshold tables whose probability scales are not comparable. AUC of the unsure score
-    # (one minus the top-class probability) separating the unseen family's positives from the
-    # two known families'. Nothing about the model changes; this only reads `rows`.
-    from sklearn.metrics import roc_auc_score as _auc
-    _lofo = {}
-    for fo, pi, po in rows:
-        _y = np.concatenate([np.ones(len(po)), np.zeros(len(pi))])
-        _s = np.concatenate([-po, -pi])
-        _lofo[fo] = round(float(_auc(_y, _s)), 4)
-    print('BEH_LOFO separation AUC (unseen vs known positives, unsure score):', _lofo)
-    json.dump(_lofo, open(OUT + 'beh_lofo_auc.json', 'w'), indent=1)
-    print()
+    print('(2-class head: probabilities are more confident than the 3-class head, so read thresholds relatively)\n')
 def behavior_map(fam_true, risk, fam_pred):
     aps = []
     for k, fam in enumerate(FAMS):
@@ -300,37 +290,6 @@ if os.environ.get('DUMP_DEV') == '1':   # out-of-fold risk for every dev pair, t
     pl.concat([pl.DataFrame({'p': Lb['p'], 'q': Lb['q'], 'label': yL.astype(np.int32), 'risk': oL}),
                pl.DataFrame({'p': U['p'], 'q': U['q'], 'label': np.zeros(len(U), np.int32), 'risk': oU})]).write_parquet(OUT + 'pair_risk_dev_oof.parquet')
     log('dev OOF risk dumped')
-
-if os.environ.get('DUMP_ALL') == '1':
-    # ADDED BY STAGE 440 (team merge). DUMP_DEV covers only the labelled pairs and the
-    # eval-like unlabelled pool U; the other pipeline's development surrogate scores every
-    # development pair that passes the evaluation co-seating filter, and a blend weight
-    # cannot be chosen on two vectors that do not sit on the same rows. So the same fold
-    # models are scored on every development pair. Training is untouched: the fold model is
-    # refitted here from exactly the parts run_cv uses, and with U_WEIGHT=0 / MIXED_NEG_W=0
-    # it sees only the labelled pairs outside its own fold. No pair is scored by a model
-    # that saw its table.
-    ALL = dev
-    fA = ALL['fold'].to_numpy(); oof_all = np.zeros(len(ALL)); fam_all = np.zeros((len(ALL), 3))
-    rng_all = np.random.default_rng(SEED); usel_all = rng_all.random(len(U)) < 0.3
-    for f in range(NF):
-        trL = Lb.filter(pl.col('fold') != f); parts = [trL]; yt = [trL['label'].to_numpy()]; wt = [np.ones(len(trL))]
-        if MIX_W > 0:
-            trM = MIX.filter(pl.col('fold') != f); parts.append(trM); yt.append(np.zeros(len(trM))); wt.append(np.full(len(trM), MIX_W))
-        if best_uw > 0:
-            trU = U.filter(pl.Series((U['fold'].to_numpy() != f) & usel_all)); parts.append(trU); yt.append(np.zeros(len(trU))); wt.append(np.full(len(trU), best_uw))
-        te = ALL.filter(pl.col('fold') == f)
-        m, (pa,) = fit_predict(pl.concat(parts), [te], np.concatenate(yt), np.concatenate(wt))
-        oof_all[fA == f] = pa
-        mf, (pf_,) = fit_predict(P.filter(pl.col('fold') != f), [te], fam_idx[fP != f], obj='multiclass', num_class=3, rounds=200)
-        fam_all[fA == f] = pf_
-        log('DUMP_ALL fold', f, 'scored', te.height)
-    pl.DataFrame({'p': ALL['p'], 'q': ALL['q'], 'tidx': ALL['tidx'], 'fold': ALL['fold'],
-                  'label': ALL['label'].fill_null(-1).cast(pl.Int32),
-                  'behavior_family': ALL['behavior_family'].fill_null('none'),
-                  'risk': oof_all, 'p_dt': fam_all[:, 0], 'p_sp': fam_all[:, 1], 'p_ci': fam_all[:, 2],
-                  }).write_parquet(OUT + 'pair_risk_dev_oof_all.parquet')
-    log('all-dev OOF risk dumped', len(ALL), 'rows')
 # ---------------- final fit + submission ----------------
 E = F.filter(pl.col('is_eval') == 1)
 E = evp.select('pair_id', 'p', 'q').join(E, on=['p', 'q'], how='left')
