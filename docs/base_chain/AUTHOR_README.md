@@ -1,85 +1,111 @@
-# Detect Suspicious Value Transfers in Poker
+# Detect Suspicious Value Transfers in Poker — the base chain's working notes
 
-Kaggle yarışması: tamamen sentetik No-Limit Texas Hold'em (NLHE) verisinde **birlikte hareket eden oyuncu çiftlerini** bulmak, davranış türlerini belirlemek ve her alarm için bir incelemecinin açıp bakabileceği **somut elleri** kanıt olarak göstermek.
+*English translation of the base chain's own README (`README.md` at commit `edddbb5` of
+the competition repository, written in Turkish by its author). Numbers, column names and
+counts are unchanged; only the prose is translated. It documents the problem, the data
+and the metric as the chain's author read them. The executable run order is in
+[`../../pipeline/README.md`](../../pipeline/README.md).*
 
-> Veri tamamen sentetiktir. Gerçek oyuncu, müşteri, ödeme ya da üretim verisi içermez.
+The competition: on fully synthetic No-Limit Texas Hold'em (NLHE) data, find **pairs of
+players acting together**, name the behaviour type, and for every alert show **concrete
+hands** a reviewer can open and look at.
 
----
-
-## 1. Problem ne?
-
-Şüpheli görünen oyunun çoğu zaman masum bir açıklaması olur: tilt, tecrübesizlik, aynı saatlerde oynamak, sıra dışı bir strateji ya da düz şans. Anlaşmalı oyuncular ise hileyi sürekli yapmaz. Manipüle ettikleri elleri normal oyunun arasına serpiştirirler.
-
-Bizden istenen sistemin üç şey yapması:
-
-1. **Çift sıralama:** Her oyuncu çifti için `0–1` arası bir risk skoru üretmek.
-2. **Davranış sınıflandırma:** Şüpheli çiftin hangi koordinasyon türüne girdiğini söylemek.
-3. **Kanıt getirme:** Koordinasyonun gözle görülebildiği en güçlü 5 eli, güçlüden zayıfa sıralı olarak vermek.
-
-Sadece yüksek risk skoru yetmiyor. Skorun bir kısmı doğru elleri bulmaktan geliyor, bu yüzden "bu iki oyuncu çok birlikte oynuyor" ya da "aralarında çok çip akmış" gibi kaba sinyallerle sınırlı kalmak yeterli olmayacak.
+> The data is entirely synthetic. It contains no real players, customers, payments or
+> production data.
 
 ---
 
-## 2. Hedef davranışlar
+## 1. What is the problem?
 
-| Sınıf (`predicted_behavior`) | Anlamı | Aksiyon logunda olası iz |
+Play that looks suspicious usually has an innocent explanation: tilt, inexperience,
+playing at the same hours, an unusual strategy, or plain luck. Colluding players, on the
+other hand, do not cheat continuously. They sprinkle the hands they manipulate in among
+ordinary play.
+
+The system is asked to do three things:
+
+1. **Pair ranking:** produce a risk score between `0` and `1` for every pair of players.
+2. **Behaviour classification:** say which type of coordination a suspicious pair falls
+   into.
+3. **Evidence retrieval:** give the five strongest hands in which the coordination is
+   visible, ordered from strongest to weakest.
+
+A high risk score alone is not enough. Part of the score comes from finding the right
+hands, so stopping at coarse signals like "these two play together a lot" or "a lot of
+chips flowed between them" will not do.
+
+---
+
+## 2. The target behaviours
+
+| Class (`predicted_behavior`) | Meaning | Possible trace in the action log |
 |---|---|---|
-| `directed_transfer` | Oyunculardan biri değeri **bilerek** diğerine kaybeder (chip dumping). | Zayıf elle büyük bet/call, ortağa karşı çok iyi eli fold'lamak, ortak lehine anlamsız all-in. |
-| `soft_play` | Ortaklar birbirine karşı **normal agresyonu göstermez**. | Güçlü elle ortağa karşı sadece check/call, raise yerine limp, heads-up'ta pasiflik. |
-| `coordinated_isolation` | Ortaklar **diğer oyuncuları sıkıştırır**, kendi aralarında çatışmayı sınırlar. | Squeeze/re-raise ile üçüncü oyuncuyu pottan atmak, ardından ortaklar arasında pasif oyun. |
-| `other_coordination` | Açıklanmayan **dördüncü bir mekanizma**. Public pozitif etiketlerde **hiç yer almaz**. | Bilinmiyor. Koordinasyon var ama yukarıdaki üç kalıba uymuyorsa kullanılır. |
-| `none` | Hedef davranış yok. | — |
+| `directed_transfer` | One of the players **deliberately** loses value to the other (chip dumping). | Big bet/call with a weak hand, folding a much better hand to the partner, a pointless all-in in the partner's favour. |
+| `soft_play` | The partners **do not show normal aggression** against each other. | Only check/call with a strong hand against the partner, limping instead of raising, passivity heads-up. |
+| `coordinated_isolation` | The partners **squeeze the other players**, while limiting conflict between themselves. | Squeeze/re-raise to push a third player out of the pot, then passive play between the partners. |
+| `other_coordination` | An undisclosed **fourth mechanism**. It **never appears** in the public positive labels. | Unknown. Used when there is coordination but it does not fit the three patterns above. |
+| `none` | No target behaviour. | — |
 
-"Olası iz" sütunu yarışmanın resmi tanımı değil, bizim yorumumuz. Resmi olarak bilinen tek şey şu: etiketli her kanıt elinde `actions.parquet` içinde **görünür, davranışa özgü bir aksiyon** bulunuyor. Senaryonun arka planda aktif olması tek başına kanıt sayılmıyor.
+The "possible trace" column is our reading, not the competition's official definition.
+The one officially known thing is this: every labelled evidence hand contains a
+**visible, behaviour-specific action** inside `actions.parquet`. The scenario merely
+being active in the background does not count as evidence.
 
-### Koordinasyon epizodik
+### Coordination is episodic
 
-- Anlaşmalı bir çift, manipüle ettiği elleri sıradan ellerle karıştırır.
-- İlişki tüm zaman çizelgesi boyunca aktif olmak zorunda değildir. Development döneminde aktif olup evaluation döneminde bitmiş olabilir, ya da tam tersi.
-- Bu yüzden tüm eller üzerinden alınan ortalama istatistikler sinyali boğabilir. **Pencere bazlı / el bazlı** analiz önemli.
+- A colluding pair mixes the hands it manipulates in with ordinary ones.
+- The relationship does not have to be active across the whole timeline. It may be active
+  in the development period and over by the evaluation period, or the other way round.
+- So statistics averaged over all hands can drown the signal. **Window-based and
+  hand-based** analysis matters.
 
-### Tuzak örüntüler (hedef değil)
+### Trap patterns (not targets)
 
-Veride bilerek konmuş, hedef davranışa benzeyen ama hedef olmayan örüntüler var:
+The data deliberately contains patterns that resemble the target behaviour without being
+it:
 
-- **Tilt:** Kaybettikten sonra agresif ya da kötü oynamak.
-- **Zayıf oyun:** Genel olarak kötü oynayıp herkese çip kaybetmek.
-- **Benzer stratejiler:** İki oyuncunun aynı tarzda oynaması.
-- **Tekrarlanan rakip seçimi:** Hep aynı kişilerle aynı masada bulunmak.
-- **Seriler (streaks):** Şans kaynaklı kazanma/kaybetme serileri.
-- **Strateji değişimleri:** Oyuncunun zamanla tarz değiştirmesi.
+- **Tilt:** playing aggressively or badly after losing.
+- **Weak play:** playing badly in general and losing chips to everyone.
+- **Similar strategies:** two players playing in the same style.
+- **Repeated opponent selection:** always being at the same table with the same people.
+- **Streaks:** winning or losing runs that come from luck.
+- **Strategy changes:** a player's style changing over time.
 
-Bunlara ek olarak oyuncular farklı zamanlarda ve farklı miktarlarda oynuyor. Bazı çiftler diğerlerinden çok daha fazla el paylaşıyor, dolayısıyla ham sayılar yerine **paylaşılan el sayısına göre normalize edilmiş** metrikler gerekiyor.
+On top of that, players play at different times and in different volumes. Some pairs share
+far more hands than others, so metrics must be **normalised by the number of shared
+hands** rather than used as raw counts.
 
 ---
 
-## 3. Veri
+## 3. The data
 
-### Genel yapı
+### Overall shape
 
-| Büyüklük | Değer |
+| Quantity | Value |
 |---|---|
-| El (hand) | 2,000,000 (6 kişilik NLHE) |
-| Oyuncu | 12,000 |
-| Oyuncu-el satırı | 12,000,000 |
-| Aksiyon | 18,609,028 |
-| Değerlendirilecek çift | 112,540 |
-| Havuz (pool) / masa | 400 havuz × 30 oyuncu, her havuz tek bir `table_id` |
-| Havuz başına el | ~5,000 |
-| Zaman aralığı | 2026-01-01 → 2026-02-02 (UTC) |
+| Hands | 2,000,000 (6-handed NLHE) |
+| Players | 12,000 |
+| Player-hand rows | 12,000,000 |
+| Actions | 18,609,028 |
+| Pairs to be scored | 112,540 |
+| Pools / tables | 400 pools × 30 players, each pool one `table_id` |
+| Hands per pool | ~5,000 |
+| Time range | 2026-01-01 → 2026-02-02 (UTC) |
 
-**Zaman bölünmesi:** Her havuz içinde ellerin ilk %60'ı `development`, son %40'ı `evaluation` dönemi (`hands.phase`).
+**Time split:** inside each pool the first 60% of the hands are the `development` period
+and the last 40% the `evaluation` period (`hands.phase`).
 
-- `development`: 1,200,000 el
-- `evaluation`: 800,000 el
+- `development`: 1,200,000 hands
+- `evaluation`: 800,000 hands
 
-Oyuncular sadece kendi havuzları içinde karşılaşıyor. Olası çift sayısı havuz başına C(30,2) = 435, toplamda 174,000. Bunların 112,540'ı değerlendirmeye giriyor.
+Players only meet inside their own pool. The number of possible pairs is C(30,2) = 435 per
+pool, 174,000 in total, of which 112,540 enter the evaluation.
 
-### Klasör yapısı
+### Directory layout
 
 ```
 detect-suspicious-value-transfers-in-poker/
-├── README.md                     ← bu dosya
+├── README.md                     ← this file
 └── data/raw/
     ├── players.parquet           (~137 KB)
     ├── hands.parquet             (~48 MB)
@@ -91,220 +117,269 @@ detect-suspicious-value-transfers-in-poker/
     └── sample_submission.csv
 ```
 
-Join anahtarları: oyun tabloları `hand_id` üzerinden, oyuncu bilgisi `player_id` üzerinden.
+Join keys: the gameplay tables on `hand_id`, the player information on `player_id`.
 
-### `players.parquet`: 12,000 satır
+### `players.parquet`: 12,000 rows
 
-| Kolon | Tip | Açıklama / değerler |
+| Column | Type | Description / values |
 |---|---|---|
-| `player_id` | str | Oyuncu kimliği |
-| `account_age_days` | int | Hesap yaşı (gün) |
+| `player_id` | str | Player identifier |
+| `account_age_days` | int | Account age in days |
 | `experience_hands_bucket` | str | `new` (1,411), `developing` (3,299), `experienced` (4,588), `veteran` (2,702) |
 | `preferred_stake` | str | `micro` (6,595), `low` (4,198), `mid` (1,207) |
 | `region_bucket` | str | `americas`, `europe`, `apac`, `other` |
 | `client_family` | str | `desktop`, `mobile`, `web` |
 
-### `hands.parquet`: 2,000,000 satır
+### `hands.parquet`: 2,000,000 rows
 
-| Kolon | Tip | Açıklama |
+| Column | Type | Description |
 |---|---|---|
-| `hand_id` | str | El kimliği |
-| `table_id` | str | Masa (= havuz), 400 farklı değer |
-| `started_at` | timestamp (UTC) | Elin başlama zamanı |
+| `hand_id` | str | Hand identifier |
+| `table_id` | str | Table (= pool), 400 distinct values |
+| `started_at` | timestamp (UTC) | When the hand started |
 | `phase` | str | `development` / `evaluation` |
-| `button_seat` | int | Dealer butonunun koltuğu |
-| `small_blind`, `big_blind` | int | Blind'lar. BB değerleri: 2 (1.09M el), 4 (715K), 10 (195K) |
-| `board_cards` | str | Açılan board kartları (ör. `7h Th 7d Kc`). El erken biterse kısa ya da boş olur |
-| `final_pot` | int | Son pot büyüklüğü |
-| `players_dealt` | int | Kart dağıtılan oyuncu sayısı |
-| `players_at_showdown` | int | Showdown'a kalan oyuncu sayısı |
+| `button_seat` | int | The dealer button's seat |
+| `small_blind`, `big_blind` | int | The blinds. BB values: 2 (1.09M hands), 4 (715K), 10 (195K) |
+| `board_cards` | str | The board cards dealt (e.g. `7h Th 7d Kc`). Short or empty if the hand ended early |
+| `final_pot` | int | Final pot size |
+| `players_dealt` | int | Number of players dealt in |
+| `players_at_showdown` | int | Number of players who reached showdown |
 
-### `seats.parquet`: 12,000,000 satır (el başına 6 oyuncu)
+### `seats.parquet`: 12,000,000 rows (6 players per hand)
 
-| Kolon | Tip | Açıklama |
+| Column | Type | Description |
 |---|---|---|
-| `hand_id`, `player_id` | str | Anahtarlar |
-| `seat_no` | int | Koltuk numarası |
-| `starting_stack` | int | Elin başındaki stack |
-| `hole_card_1`, `hole_card_2` | str | Oyuncunun kapalı kartları. **Fold eden dahil herkes için var**, bu da el gücü analizini mümkün kılıyor |
-| `total_contribution` | int | Pota koyulan toplam çip |
-| `net_chips` | int | Elden net kazanç/kayıp |
-| `folded` | bool | Fold etti mi |
-| `went_to_showdown` | bool | Showdown'a gitti mi |
-| `won_share` | float | Kazanılan pot payı (split pot için 0–1) |
+| `hand_id`, `player_id` | str | Keys |
+| `seat_no` | int | Seat number |
+| `starting_stack` | int | Stack at the start of the hand |
+| `hole_card_1`, `hole_card_2` | str | The player's hole cards. **Present for everyone, including players who folded**, which is what makes hand-strength analysis possible |
+| `total_contribution` | int | Total chips put into the pot |
+| `net_chips` | int | Net win/loss on the hand |
+| `folded` | bool | Whether they folded |
+| `went_to_showdown` | bool | Whether they reached showdown |
+| `won_share` | float | Share of the pot won (0–1 for split pots) |
 
-### `actions.parquet`: 18,609,028 satır
+### `actions.parquet`: 18,609,028 rows
 
-| Kolon | Tip | Açıklama |
+| Column | Type | Description |
 |---|---|---|
-| `hand_id` | str | El |
-| `action_no` | int | El içindeki aksiyon sırası (0'dan başlar) |
+| `hand_id` | str | Hand |
+| `action_no` | int | Order of the action within the hand (starts at 0) |
 | `street` | str | `preflop` (13.2M), `flop` (2.85M), `turn` (1.61M), `river` (0.91M) |
-| `player_id` | str | Aksiyonu yapan |
+| `player_id` | str | Who acted |
 | `action` | str | `fold` (9.65M), `call` (2.97M), `raise` (2.47M), `check` (1.84M), `bet` (1.50M), `all_in` (176K) |
-| `amount` | int | Bu aksiyonda koyulan miktar |
-| `amount_to` | int | Aksiyon sonrası toplam bet seviyesi |
-| `pot_before` | int | Aksiyon öncesi pot |
-| `stack_before` | int | Aksiyon öncesi stack |
-| `to_call` | int | Karar anında call için gereken miktar |
-| `players_active` | int | Karar anında elde kalan oyuncu sayısı |
+| `amount` | int | Amount put in with this action |
+| `amount_to` | int | The total bet level after the action |
+| `pot_before` | int | Pot before the action |
+| `stack_before` | int | Stack before the action |
+| `to_call` | int | Amount required to call at the moment of the decision |
+| `players_active` | int | Players still in the hand at the moment of the decision |
 
-Karar anı bağlamı (`pot_before`, `to_call`, `stack_before`, `players_active`) ile kapalı kartlar birlikte kullanılınca pot odds'a ve el gücüne göre **"bu aksiyon mantıklı mıydı?"** sorusu el bazında sorulabiliyor.
+With the decision-point context (`pot_before`, `to_call`, `stack_before`,
+`players_active`) and the hole cards together, the question **"was this action
+sensible?"** can be asked per hand, against pot odds and hand strength.
 
-### `development_labels.csv`: 1,860 satır
+### `development_labels.csv`: 1,860 rows
 
-| Kolon | Açıklama |
+| Column | Description |
 |---|---|
-| `pair_id` | Çift kimliği |
-| `player_1`, `player_2` | Oyuncular |
-| `label` | `1` = hedef, `0` = hedef değil |
+| `pair_id` | Pair identifier |
+| `player_1`, `player_2` | The players |
+| `label` | `1` = target, `0` = not a target |
 | `label_status` | `confirmed_target` (372) / `confirmed_non_target` (1,488) |
 | `behavior_family` | `directed_transfer` (148), `soft_play` (132), `coordinated_isolation` (92), `none` (1,488) |
 
-⚠️ **Pozitif-etiketsiz (PU) öğrenme durumu:** Bu dosya development dönemindeki koordineli çiftlerin **hepsini listelemiyor**. Listede olmayan bir çift **negatif değil, bilinmiyor**. Listede olmayan çiftleri negatif kabul edip eğitim yapmak modeli yanıltır.
+⚠️ **This is a positive-unlabelled (PU) setting:** the file does **not** list every
+coordinated pair in the development period. A pair that is not in the list is **not
+negative, it is unknown**. Training with the unlisted pairs treated as negatives misleads
+the model.
 
-`confirmed_non_target` çiftleri muhtemelen tuzak örüntüleri (tilt, benzer strateji vb.) içeren "zor negatifler". Bu yüzden negatif sınıfı öğrenmek için çok değerliler.
+The `confirmed_non_target` pairs are probably "hard negatives" containing the trap
+patterns (tilt, similar strategy and so on). That makes them very valuable for learning
+the negative class.
 
-### `development_evidence.csv`: 1,817 satır
+### `development_evidence.csv`: 1,817 rows
 
-| Kolon | Açıklama |
+| Column | Description |
 |---|---|
-| `pair_id` | Public pozitif çift |
-| `evidence_rank` | 1–5, güçlüden zayıfa |
-| `hand_id` | Kanıt eli (development dönemi) |
-| `behavior_family` | Davranış türü |
+| `pair_id` | A public positive pair |
+| `evidence_rank` | 1–5, strongest to weakest |
+| `hand_id` | The evidence hand (development period) |
+| `behavior_family` | Behaviour type |
 
-372 pozitif çiftin 340'ında 5, 21'inde 4, 11'inde 3 kanıt eli var. Bu eller, "kanıt eli neye benzer?" sorusuna cevap veren tek gözetimli sinyal. El seviyesinde bir **evidence scorer** eğitmek için kullanılabilir.
+Of the 372 positive pairs, 340 have five evidence hands, 21 have four and 11 have three.
+These hands are the only supervised signal that answers "what does an evidence hand look
+like?". They can be used to train an **evidence scorer** at the hand level.
 
-### `evaluation_pairs.csv`: 112,540 satır
+### `evaluation_pairs.csv`: 112,540 rows
 
-| Kolon | Açıklama |
+| Column | Description |
 |---|---|
-| `pair_id` | Skorlanacak çift |
-| `player_1`, `player_2` | Oyuncular |
-| `shared_hands` | Evaluation döneminde birlikte oynanan el sayısı. Min 38, medyan 76, ortalama ~86, max 419 |
+| `pair_id` | The pair to be scored |
+| `player_1`, `player_2` | The players |
+| `shared_hands` | Hands played together in the evaluation period. Min 38, median 76, mean ~86, max 419 |
 
-Public olarak etiketlenmiş çift ID'leri ve **public pozitif bir oyuncu içeren** çiftler bu listeden çıkarılmış. Yani development'ta pozitif olan bir oyuncu evaluation çiftlerinde hiç yer almıyor.
+Publicly labelled pair ids, and pairs **containing a public positive player**, have been
+removed from this list. So a player who is positive in development never appears in the
+evaluation pairs.
 
 ---
 
-## 4. Submission formatı
+## 4. Submission format
 
-Dosya adı `submission.csv` olmalı ve `evaluation_pairs.csv` içindeki **her `pair_id` için bir satır** içermeli. Şablon olarak `sample_submission.csv` kullanılır.
+The file must be called `submission.csv` and contain **one row for every `pair_id`** in
+`evaluation_pairs.csv`. `sample_submission.csv` is the template.
 
-| Kolon | Açıklama |
+| Column | Description |
 |---|---|
-| `pair_id` | Değiştirmeden kopyalanır |
-| `risk_score` | 0–1 arası. Yüksek değer = koordinasyon ihtimali yüksek |
+| `pair_id` | Copied unchanged |
+| `risk_score` | Between 0 and 1. Higher = more likely coordination |
 | `predicted_behavior` | `none`, `directed_transfer`, `soft_play`, `coordinated_isolation`, `other_coordination` |
-| `evidence_hand_1` … `evidence_hand_5` | Evaluation dönemine ait, güçlüden zayıfa sıralı `hand_id`'ler. Kullanılmayan pozisyona `NO_EVIDENCE` yazılır |
+| `evidence_hand_1` … `evidence_hand_5` | `hand_id`s from the evaluation period, strongest to weakest. Unused positions take `NO_EVIDENCE` |
 
-Örnek satır:
+Example row:
 
 ```csv
 pair_id,risk_score,predicted_behavior,evidence_hand_1,evidence_hand_2,evidence_hand_3,evidence_hand_4,evidence_hand_5
 P00005AC2A509,0.87,soft_play,H2D8EAC9EC7DA02,HF67EF16BB8EF76,HD9B5F56C491E2D,NO_EVIDENCE,NO_EVIDENCE
 ```
 
-**Kurallar:**
+**Rules:**
 
-- Boş hücre olmamalı. Kaggle kabul etmiyor.
-- Aynı satırda aynı `hand_id` **tekrar edilirse submission geçersiz olur**.
-- Kanıt elinde çiftin **iki oyuncusu da** bulunmalı.
-- Bilinmeyen, ortak olmayan, development dönemine ait ya da ilgisiz eller hata vermez ama **kanıt puanı almaz**.
+- No empty cells. Kaggle rejects them.
+- Repeating the same `hand_id` in one row **invalidates the submission**.
+- **Both players** of the pair must be seated in an evidence hand.
+- Unknown, non-shared, development-period or irrelevant hands do not raise an error but
+  **earn no evidence credit**.
 
 ---
 
-## 5. Değerlendirme
+## 5. Evaluation
 
-Leaderboard skoru üç bileşenden oluşuyor:
+The leaderboard score has three components.
 
 ### 5.1 Pair AP
 
-`risk_score` ile tüm evaluation çiftleri üzerinden hesaplanan Average Precision:
+Average Precision computed from `risk_score` over all evaluation pairs:
 
 $$\text{AP} = \sum_n (R_n - R_{n-1})\, P_n$$
 
-$P_n$ ve $R_n$, n'inci eşikteki precision ve recall. Eşit risk skorları `pair_id`'ye göre deterministik olarak sıralanıyor. Bu yüzden ties'tan kaçınmak iyi olur.
+with $P_n$ and $R_n$ the precision and recall at the n-th threshold. Equal risk scores are
+ordered deterministically by `pair_id`, so avoiding ties is worthwhile.
 
 ### 5.2 Evidence MAP@5
 
-- Sadece **gerçek hedef çiftler** üzerinden ortalama alınıyor.
-- Her hedef çift için gönderilen sıralı 5 elin, gizli "planted evidence" elleriyle karşılaştırılmasıyla AP@5 hesaplanıyor.
-- Kaçırılan (kanıt verilmeyen) hedef çift **0** katkı yapıyor.
-- `NO_EVIDENCE` yok sayılıyor.
+- Averaged over the **true target pairs** only.
+- For every target pair, AP@5 is computed by comparing the five ordered hands submitted
+  with the hidden "planted evidence" hands.
+- A target pair that is missed (no evidence given) contributes **0**.
+- `NO_EVIDENCE` is ignored.
 
 ### 5.3 Behavior MAP
 
-- Açıklanmış **üç** aile (`directed_transfer`, `soft_play`, `coordinated_isolation`) için one-vs-rest AP'nin makro ortalaması.
-- Bir aile için sınıf skoru şöyle: o aile tahmin edildiyse `risk_score`, edilmediyse `0`.
-- Hiç tahmin edilmeyen sınıf **0** katkı yapıyor. Ortalama her zaman üç aile üzerinden alındığı için bir sınıfı hiç tahmin etmemek pahalıya patlar.
-- `other_coordination` bu bileşene dahil değil.
+- The macro average of one-vs-rest AP over the **three** disclosed families
+  (`directed_transfer`, `soft_play`, `coordinated_isolation`).
+- The class score for a family is `risk_score` if that family is predicted, `0` otherwise.
+- A class that is never predicted contributes **0**. Since the average is always taken
+  over three families, never predicting one of them is expensive.
+- `other_coordination` is not part of this component.
 
-> Bileşenlerin nihai skorda nasıl birleştirildiği (eşit ağırlıklı ortalama mı, farklı ağırlıklar mı) açıklamada belirtilmemiş. Resmi metric notebook'undan teyit edilmeli.
+> How the components are combined into the final score (equal weights or different ones)
+> is not stated in the description. To be confirmed from the official metric notebook.
 
-### Leaderboard ayrımı
+### The leaderboard split
 
-- Public LB: evaluation çiftlerinin ~%30'u
-- Private LB: ~%70'i
-- Ayrım davranış ailesine göre stratified. Etiketler ve LB ataması gizli, metric kodu public.
+- Public LB: ~30% of the evaluation pairs
+- Private LB: ~70%
+- The split is stratified by behaviour family. The labels and the LB assignment are
+  hidden; the metric code is public.
 
-### Metrikten çıkan pratik sonuçlar
+### Practical consequences of the metric
 
-- **Kanıt vermenin maliyeti yok.** Evidence MAP@5 sadece gerçek hedef çiftler üzerinden hesaplandığı için negatif çiftlere kanıt eli yazmak ceza almıyor. Düşük riskli çiftler dahil **her satıra 5 aday el** yazmak mantıklı.
-- **Kanıt sıralaması önemli.** MAP@5 sıraya duyarlı, en güçlü kanıt 1. pozisyonda olmalı.
-- **Kanıt eli her zaman ortak el olmalı.** Adaylar sadece iki oyuncunun da oturduğu evaluation ellerinden seçilmeli.
-- **`other_coordination` riskli bir etiket.** Bu tahmin üç ailenin hiçbirine skor vermediği için çift gerçekte bilinen üç aileden biriyse Behavior MAP'te puan kaybedilir. Pair AP ve Evidence bileşenleri ise etkilenmez. Sadece üç kalıba gerçekten uymayan güçlü sinyallerde kullanılmalı.
-- **Sınıf kararı ile risk skoru birbirine bağlı.** Behavior MAP'te sınıf skoru `risk_score` olduğu için yanlış sınıflandırılan yüksek riskli bir çift, hem doğru ailesinde kayıp hem yanlış ailesinde false positive yaratır.
-
----
-
-## 6. Kurallar ve kazanan doğrulaması
-
-**Yasak:** Koordinasyon **poker aktivitesinden** çıkarılmalı. Şunları kullanmak yasak:
-
-- ID formatları (ör. `pair_id`/`player_id` içindeki desenler)
-- Satır/dosya sıralaması
-- Generator'ın iç yapısı
-- Oyunla ilgisi olmayan her türlü artifact
-
-**Ödüle hak kazanmak için:** Private LB açıklandıktan sonraki **7 gün içinde**, sıralamadan bağımsız olarak şunlar yayınlanmalı:
-
-1. En fazla **1,500 kelimelik** bir Kaggle Solution Writeup.
-2. Seçilen submission'ı yeniden üretebilecek kodu içeren **public notebook veya repo**.
-3. Gönderilen kanıtlardan **5 kısa vaka incelemesi**. Her birinde `pair_id`, hand ID'ler, gözlemlenen davranış ve **makul bir masum alternatif açıklama** yer almalı.
-
-Organizatör kodu temiz bir ortamda çalıştırabilir. Yeniden üretilemeyen ya da kurallara uymayan submission ödül alamaz.
-
-Bu yüzden pipeline **baştan itibaren tekrarlanabilir** olmalı: sabit seed'ler, sabit bağımlılık versiyonları ve açık bir çalıştırma talimatı.
+- **Giving evidence costs nothing.** Since Evidence MAP@5 is computed over the true target
+  pairs only, writing evidence hands on negative pairs carries no penalty. It is
+  sensible to write **five candidate hands on every row**, including low-risk pairs.
+- **The order of the evidence matters.** MAP@5 is order-sensitive; the strongest evidence
+  must be in position 1.
+- **An evidence hand must always be a shared hand.** Candidates must be chosen from
+  evaluation hands in which both players were seated.
+- **`other_coordination` is a risky label.** Since that prediction gives no score to any
+  of the three families, if the pair really is one of the three known families, Behavior
+  MAP loses points. Pair AP and the evidence component are unaffected. It should be used
+  only where there is a strong signal that genuinely does not fit the three patterns.
+- **The class decision and the risk score are coupled.** Because the class score in
+  Behavior MAP is `risk_score`, a misclassified high-risk pair both loses points in its
+  true family and creates a false positive in the wrong one.
 
 ---
 
-## 7. Yaklaşım için ilk notlar
+## 6. Rules and winner verification
 
-Bunlar kesinleşmiş bir plan değil, başlangıç fikirleri:
+**Prohibited:** coordination must be inferred from **poker activity**. The following may
+not be used:
 
-1. **El seviyesi sinyaller (kanıt motoru):** Çiftin ortak olduğu her el için, iki oyuncunun birbirine karşı yaptığı aksiyonların el gücüne ve pot odds'a göre ne kadar "anormal" olduğunu ölçen skorlar üretmek. Örnekler: güçlü elle ortağa karşı pasiflik, zayıf elle ortağa büyük para koymak, üçüncü oyuncuya karşı ortak baskı. Development kanıt elleri bu scorer'ı eğitmek ya da kalibre etmek için kullanılabilir.
-2. **Oyuncu baseline'ı:** Bir oyuncunun ortağa karşı davranışını, **aynı oyuncunun diğer rakiplere karşı** davranışıyla kıyaslamak. Bu, benzer strateji ve zayıf oyun gibi tuzakları eler.
-3. **Çift seviyesi agregasyon:** El skorlarını çift bazında toplamak. Epizodik yapı nedeniyle ortalama yerine top-k, zaman pencereleri, yoğunluk ya da change-point istatistikleri kullanmak. Sonuçları `shared_hands`'e göre normalize etmek.
-4. **PU learning:** Etiketsiz çiftleri negatif saymamak. `confirmed_non_target` çiftleri zor negatif olarak, `confirmed_target` çiftleri pozitif olarak kullanıp etiketsizleri ayrı ele almak.
-5. **Doğrulama:** Development döneminde, public pozitif oyuncuları içeren çiftleri hariç tutarak evaluation koşullarını taklit eden bir CV kurmak. Yarışmanın üç metriğinin yerel bir kopyasını yazmak (resmi metric notebook'u referans alınarak).
-6. **Anomali tespiti ile `other_coordination`:** Bilinen üç kalıba uymayan ama çift bazında belirgin şekilde anormal olan ilişkiler için ayrı bir dal.
+- ID formats (patterns inside `pair_id`/`player_id`)
+- Row or file ordering
+- The generator's internals
+- Any artefact unrelated to gameplay
+
+**To be eligible for a prize:** within **7 days** of the private leaderboard being
+published, and regardless of standing, the following must be published:
+
+1. A Kaggle solution write-up of at most **1,500 words**.
+2. A **public notebook or repository** containing the code that can reproduce the selected
+   submission.
+3. **Five short case reviews** from the submitted evidence. Each must contain the
+   `pair_id`, the hand IDs, the observed behaviour and **a plausible innocent alternative
+   explanation**.
+
+The organiser may run the code in a clean environment. A submission that cannot be
+reproduced, or that breaks the rules, is not eligible.
+
+For that reason the pipeline must be **reproducible from the start**: fixed seeds, fixed
+dependency versions and clear run instructions.
 
 ---
 
-## 8. Terimler
+## 7. First notes on the approach
 
-| Terim | Anlamı |
+These are starting ideas, not a settled plan:
+
+1. **Hand-level signals (the evidence engine):** for every hand the pair shares, produce
+   scores measuring how "abnormal" the actions the two players take against each other are
+   given hand strength and pot odds. Examples: passivity with a strong hand against the
+   partner, putting a lot of money in with a weak hand against the partner, joint pressure
+   on a third player. The development evidence hands can be used to train or calibrate
+   that scorer.
+2. **The player's own baseline:** compare a player's behaviour against the partner with
+   **the same player's** behaviour against other opponents. That removes traps like
+   similar strategy and weak play.
+3. **Pair-level aggregation:** aggregate hand scores per pair. Because the structure is
+   episodic, use top-k, time windows, density or change-point statistics instead of the
+   mean. Normalise the results by `shared_hands`.
+4. **PU learning:** do not treat unlabelled pairs as negatives. Use `confirmed_non_target`
+   pairs as hard negatives and `confirmed_target` pairs as positives, and handle the
+   unlabelled ones separately.
+5. **Validation:** build a CV in the development period that imitates the evaluation
+   conditions by excluding pairs containing public positive players. Write a local copy of
+   the competition's three metrics (taking the official metric notebook as reference).
+6. **`other_coordination` through anomaly detection:** a separate branch for relationships
+   that do not fit the three known patterns but are clearly abnormal at the pair level.
+
+---
+
+## 8. Glossary
+
+| Term | Meaning |
 |---|---|
 | **NLHE** | No-Limit Texas Hold'em |
 | **BB** | Big blind |
-| **AP** | Average Precision (çift sıralaması için) |
-| **MAP@5** | En fazla 5 elden oluşan kanıt sıralaması için Mean Average Precision |
-| **PU** | Positive-Unlabelled learning: sadece bazı pozitiflerin etiketli olduğu, geri kalanının bilinmediği öğrenme |
-| **Chip dumping** | Bir oyuncunun bilerek başka bir oyuncuya çip kaybetmesi (`directed_transfer`) |
-| **Soft play** | Anlaşmalı oyuncuların birbirine karşı agresif oynamaması |
-| **Squeeze / isolation** | Rakipleri pottan atmak için yapılan agresif raise'ler |
-| **Tilt** | Duygusal nedenlerle, genelde kayıp sonrası, bozulan oyun |
-| **Showdown** | Son bet turundan sonra kartların açılması |
-| **Development / Evaluation** | Her havuzdaki ellerin ilk %60'ı / son %40'ı |
+| **AP** | Average Precision (for the pair ranking) |
+| **MAP@5** | Mean Average Precision for an evidence ranking of at most five hands |
+| **PU** | Positive-Unlabelled learning: only some positives are labelled and the rest are unknown |
+| **Chip dumping** | One player deliberately losing chips to another (`directed_transfer`) |
+| **Soft play** | Colluding players not playing aggressively against each other |
+| **Squeeze / isolation** | Aggressive raises made to push opponents out of the pot |
+| **Tilt** | Play that deteriorates for emotional reasons, usually after a loss |
+| **Showdown** | The cards being turned up after the last betting round |
+| **Development / Evaluation** | The first 60% / last 40% of the hands in each pool |

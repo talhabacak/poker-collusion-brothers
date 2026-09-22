@@ -212,6 +212,9 @@ reference for the seven-card path:
 * [`docs/FINAL_SELECTION.md`](docs/FINAL_SELECTION.md) — the risk/behaviour/evidence
   cross on the board, the prediction registered before the second final was sent, and
   the selection rule that was locked before its score was seen.
+* [`REVIEW.md`](REVIEW.md) — the checklist the team's second author worked through:
+  the commands that diff his stages against his own commit, the flag set against his
+  own run script, and the claims this repository makes about his chain.
 * [`docs/base_chain/`](docs/base_chain) — the base chain's own record, copied
   verbatim from the branch it was developed on: its README and run order, its
   86 KB experiment log, its own write-up and case reviews (both superseded, and
