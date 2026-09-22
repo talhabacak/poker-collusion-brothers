@@ -1,0 +1,23 @@
+# The competition data is downloaded, never committed.
+data/raw/
+data/cache/
+data/interim/
+
+# Everything a run produces, except the submitted copies under submissions/submitted/.
+artifacts/
+submissions/*.csv
+!submissions/submitted/*.csv
+logs/
+*.log
+*.err
+*.pid
+
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Credentials never belong here.
+kaggle.json
+*.pem

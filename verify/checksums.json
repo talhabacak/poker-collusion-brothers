@@ -1,0 +1,45 @@
+{
+  "competition": "detect-suspicious-value-transfers-in-poker",
+  "team": "Brothers",
+  "private_leaderboard": {"rank": 11, "of_teams": 362, "score": 0.92237},
+  "selected_submissions": {
+    "tarik_v55_mil_evidence.csv": {
+      "role": "primary final - this is the file that scored the team's leaderboard result",
+      "sha256": "67cdcc9ad5c3db2fd72d3dc6130080b9aa2fcd743a1b416f65938f66658bb7a2",
+      "public": 0.91834,
+      "private": 0.92237,
+      "submitted_utc": "2026-09-20T12:58:45Z",
+      "built_by": "engine_a/scripts/534_b_mil_candidate.py"
+    },
+    "hybrid_riskA_behB_evMIL.csv": {
+      "role": "second final",
+      "sha256": "ff4c7f786b872108eccc94b92209dc451a1ad4f6e5f816e4e8f4c1d6b69c2c62",
+      "public": 0.91112,
+      "private": 0.91281,
+      "submitted_utc": "2026-09-20T20:23:51Z",
+      "built_by": "engine_a/scripts/608_build_hybrid_riskA.py"
+    }
+  },
+  "inputs_to_the_finals": {
+    "tarik_v55_best.csv": {
+      "role": "engine B's v55 - the primary's risk and behaviour columns, copied as text",
+      "sha256": "41688e38733a38fed7efdb3c98662877e813e333abb9f0c3934dbdd4f2e2cadf",
+      "public": 0.91748,
+      "private": 0.92109
+    },
+    "_risk_v64_union_oppaware.csv": {
+      "role": "engine A's v64 risk column, the only part of v64 the second final carries",
+      "sha256": "0a3c65fd35a5a12ce57f1f76058396860a50b18e620d869afd1193504337f4c1"
+    }
+  },
+  "competition_data_sha256": {
+    "actions.parquet": "ef9ef88d65e88e001f80bda69e84cc56290aa33f31530549b4611f5785a08166",
+    "development_evidence.csv": "f5889ee490b7dd0d03341b5505a1789071558bd5a5d1a31d61f25541460d33ba",
+    "development_labels.csv": "40fcfa99d67db2ccbc37c56d4ef858676f1a677128db873de0e94bcea15f62a9",
+    "evaluation_pairs.csv": "8986e4c99bf2578d7b6a089982dba4ff60d995b152b97a20f9d41d5e11b14b22",
+    "hands.parquet": "82c9ad1c01cae6a68b28e194b9dd0bad9ca09f94628b429c0e58e970cc29eecd",
+    "players.parquet": "ab917f7678a0b286222ea149abcc1d8d027c59eeaa3d7ca3d3a9300eaa566b8b",
+    "sample_submission.csv": "6c8c0050fe2739881b39ad0fc84fd93fb4ef72f618c54c02cb3dbc57184756ab",
+    "seats.parquet": "347a68268d277079751368b7d3169793da5c547f7421e1851731e557b67ec8e7"
+  }
+}
