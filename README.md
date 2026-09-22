@@ -142,7 +142,7 @@ Being exact about this is more useful to a reviewer than a blanket claim.
 `verify` compares both results against the sha256 of the submitted files.
 
 **Reproduced under one caveat: v55 (the `base` phase).** The run order and every flag
-in this phase are `docs/run_A3.sh` — the script in commit `823dce0`
+in this phase are `docs/base_chain/run_A3.sh` — the script in commit `823dce0`
 ("Opponent-aware policy residuals: 0.90858 -> 0.91748") that built the file — copied
 across rather than reconstructed: `U_WEIGHT=0.0 MIXED_NEG_W=0 USE_VAL=0 USE_CT=0
 USE_CTR=0 USE_OA=1 USE_OC=1 OA_COLS=""` on the pair model, `USE_OAH=1 USE_OCH=1` with
@@ -212,6 +212,10 @@ reference for the seven-card path:
 * [`docs/FINAL_SELECTION.md`](docs/FINAL_SELECTION.md) — the risk/behaviour/evidence
   cross on the board, the prediction registered before the second final was sent, and
   the selection rule that was locked before its score was seen.
+* [`docs/base_chain/`](docs/base_chain) — the base chain's own record, copied
+  verbatim from the branch it was developed on: its README and run order, its
+  86 KB experiment log, its own write-up and case reviews (both superseded, and
+  marked as such), and the six run scripts that lead to v55.
 * [`docs/TWO_CHAINS.md`](docs/TWO_CHAINS.md) — why the two of us worked without
   sharing code until the last days, where each chain stood alone, what crossed
   over when they were joined, and every file submitted after the merge with what

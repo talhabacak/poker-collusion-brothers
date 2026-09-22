@@ -59,7 +59,7 @@ V55 = "tarik_v55_best.csv"
 PHASES = ("base", "risk", "mil", "hybrid", "verify")
 DEFAULT_PHASES = ("risk", "mil", "hybrid", "verify")
 
-# The v55 configuration, taken verbatim from `docs/run_A3.sh` - the script in commit
+# The v55 configuration, taken verbatim from `docs/base_chain/run_A3.sh` - the script in commit
 # 823dce0 ("Opponent-aware policy residuals: 0.90858 -> 0.91748") that built the file.
 BASE_ENV = {"USE_VAL": "0", "USE_CT": "0", "USE_CTR": "0", "PYTHONUNBUFFERED": "1",
             "PYTHONIOENCODING": "utf-8"}

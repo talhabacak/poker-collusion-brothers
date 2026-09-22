@@ -99,7 +99,7 @@ project's clearest lesson and it is stated in full in
 
 Its stages come from commit `823dce0` on the branch the base chain was developed on —
 the commit whose message is "Opponent-aware policy residuals: 0.90858 -> 0.91748" —
-and its own run script is included as [`run_A3.sh`](run_A3.sh). Every flag the `base`
+and its own run script is included as [`run_A3.sh`](base_chain/run_A3.sh). Every flag the `base`
 phase of `run_all.py` sets is read out of that script rather than inferred, which
 matters for one of them: `USE_OC=1` turns on the opponent-conditioned residuals *in
 the pair model*, and the working copy used for the cross-engine measurements predates

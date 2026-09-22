@@ -20,7 +20,7 @@ the working copy used for the earlier cross-engine measurements, whose pair mode
 predates the `USE_OC` block and would silently ignore the opponent-conditioned
 residuals. `05_pair_risk_behaviour.py` is that commit's `src/05_pair_model.py`,
 renamed because the risk chain also has a `05_pair_model.py`; nothing else about it
-changed. The flags every stage runs under are in [`../docs/run_A3.sh`](../docs/run_A3.sh),
+changed. The flags every stage runs under are in [`../docs/base_chain/run_A3.sh`](../docs/base_chain/run_A3.sh),
 the author's own script, included here verbatim.
 
 | stage | writes |
