@@ -9,7 +9,7 @@ scoring in the Kaggle competition
 | `tarik_v55_mil_evidence.csv` | primary final — the team's leaderboard result | 0.91834 | **0.92237** |
 | `hybrid_riskA_behB_evMIL.csv` | second final | 0.91112 | 0.91281 |
 
-Private leaderboard: **11th of 362**.
+Private leaderboard: **11th**; public 14th. 371 teams on the board.
 
 * Method: [`WRITEUP.md`](WRITEUP.md) (the Kaggle solution write-up, ~1,340 words).
 * Five evidence case reviews: [`CASE_REVIEWS.md`](CASE_REVIEWS.md).
@@ -99,13 +99,14 @@ Phases, and what each produces:
 Phase C reads `submissions/tarik_v55_best.csv`. If phase B has not been run,
 `run_all.py` copies the submitted v55 out of `submissions/submitted/` and says so.
 
-**Runtimes.** Each stage's seconds are written to `artifacts/run_manifest.json`.
-Measured on the machine above: phase A is roughly 1–1.5 hours, of which stage 150
-(opponent-aware policy, 49M action-opponent rows) took 1,448 s and stage 20 took
-322 s; phase C's stage 534 took 319 s after the heads were fitted; phases D and V
-take seconds. Phase B is the long one — engine B's own README puts its short chain at
-about 35 minutes on 16 cores, and the full v55 configuration with the two
-opponent-aware blocks is several hours.
+**Runtimes.** Each stage's seconds are written to `artifacts/run_manifest.json`, so
+the numbers below are what a rerun will report back. Measured on the machine above:
+stage 150 (opponent-aware policy, 49M action-opponent rows) 1,448 s, stage 20 322 s,
+stage 02b 233 s, the rest of phase A's measured stages about 420 s together — call
+phase A an hour, with 04e, 49 and 156 not separately timed. Phase C's stage 534 took
+319 s; phases D and V take seconds. Phase B is the long one: engine B's own README
+puts its short chain at about 35 minutes on 16 cores, and the v55 configuration adds
+the two opponent-aware blocks on top of that.
 
 **Determinism.** Seeds are fixed (engine A `20260914`, engine B `42`), LightGBM runs
 in deterministic mode with a fixed thread count, folds are grouped by table through

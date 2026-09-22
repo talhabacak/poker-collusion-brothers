@@ -1,7 +1,13 @@
 {
   "competition": "detect-suspicious-value-transfers-in-poker",
   "team": "Brothers",
-  "private_leaderboard": {"rank": 11, "of_teams": 362, "score": 0.92237},
+  "private_leaderboard": {
+    "rank": 11,
+    "score": 0.92237,
+    "teams_on_the_board": 371,
+    "public_rank": 14,
+    "public_score": 0.91834
+  },
   "selected_submissions": {
     "tarik_v55_mil_evidence.csv": {
       "role": "primary final - this is the file that scored the team's leaderboard result",

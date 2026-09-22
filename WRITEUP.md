@@ -1,6 +1,6 @@
 # Two engines, one column: how the Brothers submission was built
 
-Team **Brothers** — private 0.92237 (11th of 362), public 0.91834.
+Team **Brothers** — private 0.92237 (11th of 371 teams), public 0.91834 (14th).
 Code: this repository. Case reviews: [`CASE_REVIEWS.md`](CASE_REVIEWS.md).
 
 ## The problem as we framed it
