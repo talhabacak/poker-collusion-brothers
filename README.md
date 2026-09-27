@@ -66,7 +66,7 @@ competition, including the dead ends, we can provide it.
 
 Python 3.13, one environment for the whole repository.
 
-    git clone <this repository>
+    git clone https://github.com/talhabacak/poker-collusion-brothers.git
     cd poker-collusion-brothers
     python -m venv .venv && .venv/Scripts/activate      # Windows
     #  python3 -m venv .venv && source .venv/bin/activate  # Linux/macOS

@@ -1,7 +1,7 @@
 # Two engines, one column: how the Brothers submission was built
 
 Team **Brothers** — private 0.92237 (11th of 371 teams), public 0.91834 (14th).
-Code: this repository. Case reviews: [`CASE_REVIEWS.md`](CASE_REVIEWS.md).
+Code (MIT): [https://github.com/talhabacak/poker-collusion-brothers](https://github.com/talhabacak/poker-collusion-brothers). Five case reviews: [`CASE_REVIEWS.md`](https://github.com/talhabacak/poker-collusion-brothers/blob/main/CASE_REVIEWS.md).
 
 ## The problem as we framed it
 
@@ -105,7 +105,7 @@ recorded as worthless because they paid nothing in engine A — the engine whose
 development metric does not transfer. Rebuilt in engine B's reranker after the
 deadline, the same architecture scored 0.92121: +0.0037 over v55 and above the team's
 best in-competition file. The mechanism was never the problem. This is the one thing
-we would do differently, and it is written up in `docs/` rather than left out.
+we would do differently, and it is written up in [`docs/MEASUREMENT_NOTES.md`](https://github.com/talhabacak/poker-collusion-brothers/blob/main/docs/MEASUREMENT_NOTES.md) rather than left out.
 
 ## Choosing the two finals
 
@@ -140,7 +140,7 @@ inside the range, and by that rule became the second final.
 `--dry-run` prints the plan. The default run rebuilds v64's risk column, the MIL
 evidence column, both selected files and their checksums; `--with-base` rebuilds
 v55 first. Setup, hardware, runtimes and what is and is not rebuilt here are in the
-[README](README.md).
+[README](https://github.com/talhabacak/poker-collusion-brothers#setup).
 
 The two chains, what each reached alone, and every file submitted after they
-merged: [`docs/TWO_CHAINS.md`](docs/TWO_CHAINS.md).
+merged: [`docs/TWO_CHAINS.md`](https://github.com/talhabacak/poker-collusion-brothers/blob/main/docs/TWO_CHAINS.md).

@@ -102,9 +102,9 @@ likely cause is library versions, and your pins are recorded in `requirements.tx
 
 ## 6. Publication
 
-The repository is **private** for now. It goes public once you have approved it, and the
-write-up is then published on Kaggle with its URL posted as a reply to discussion 742244.
-**The deadline is 28 September.**
+The repository is **public** at <https://github.com/talhabacak/poker-collusion-brothers>.
+The write-up (`WRITEUP.md`) is published as a Kaggle Solution Writeup and its URL posted as
+a reply to discussion 742244, as the organiser asked. The deadline was 28 September.
 
 - Is there anywhere you would rather not be named? (`LICENSE`, the credits in `README.md`,
   the stage headings in `pipeline/README.md`, `docs/TWO_CHAINS.md`)
