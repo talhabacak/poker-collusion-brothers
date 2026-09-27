@@ -181,9 +181,12 @@ STAGES: list[Stage] = [
           "the seed-bagged MIL block inside the evidence reranker",
           ("data/interim/533_blocks/full_mil_bag.parquet",),
           args=("--protocols", "full", "--arms", "bag")),
+    # The MIL head read +0.00729 over its placebo against a +0.010 bar and was shipped anyway,
+    # as an explicit decision (WRITEUP.md). Stage 534 refuses to build unless told so; the flag
+    # records that decision in its report and leaves stage 533's verdict as it was measured.
     Stage("mil6", "mil", f"{SCRIPTS}/534_b_mil_candidate.py",
           "PRIMARY FINAL: v55 with the MIL evidence column, risk and behaviour copied as text",
-          (f"submissions/{PRIMARY}",)),
+          (f"submissions/{PRIMARY}",), args=("--user-approved",)),
 
     # ----------------------------------------------------------- phase hybrid
     Stage("hybrid1", "hybrid", f"{SCRIPTS}/608_build_hybrid_riskA.py",
@@ -296,6 +299,9 @@ def main() -> None:
                 print(f"  {s.key}: " + " ".join(f"{k}={v}" for k, v in s.env.items()
                                                 if k not in ("PYTHONUNBUFFERED", "PYTHONIOENCODING")))
         return
+
+    # Stages 533 and 534 write their reranker logs here; the directory is not tracked.
+    (ROOT / "logs").mkdir(exist_ok=True)
 
     missing = [f for f in RAW_FILES if not (RAW / f).exists()]
     if missing:

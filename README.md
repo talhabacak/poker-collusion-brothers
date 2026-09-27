@@ -173,7 +173,14 @@ share one data directory; stage 533 finds the reranker harness through
 when the competition-era template is absent, asserting the `pair_id` order is
 identical, and its docstring records that `build_combo.py` is not here because neither
 selected file uses the columns it attached; stage 608 reads the risk column straight
-from stage 156's output. No feature, seed, threshold or model parameter is touched.
+from stage 156's output. Two more were found by a clean rerun from a fresh clone: stage
+`01_pair_universe` resolves its library path from its own location rather than the
+working directory, and stage 533 hands the reranker harness v55 as `RERANK_IN` in
+place of a competition-tree file no stage writes (the harness takes only risk and
+behaviour from it, and stage 534 replaces both with v55's text). `run_all.py` also
+creates `logs/` and passes stage 534 `--user-approved`, the flag that records the
+decision to ship the MIL head below its bar. No feature, seed, threshold or model
+parameter is touched.
 The one rename is `05_pair_model.py` of the base chain, which became
 `05_pair_risk_behaviour.py` because both chains had a file of that name.
 

@@ -1,6 +1,9 @@
 """Stage 1: co-seating universe per phase, and identification of the eval filter rule."""
 import sys, time
-sys.path.insert(0, "src")
+from pathlib import Path
+# REPO NOTE: the competition tree ran this from the directory holding src/; run_all.py
+# runs every stage from the repository root, so the library path is resolved from here.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import polars as pl
 from pokercol import config as C
 

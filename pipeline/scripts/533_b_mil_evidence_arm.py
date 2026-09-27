@@ -63,7 +63,10 @@ MIL_COLS = ["mil_lse_z", "mil_max_z", "mil_z_gap", "mil_top_street", "mil_top_ac
             "mil_top_resp_partner", "mil_top_surprise", "pct_mil_max_z"]
 BASE_ENV = {"USE_VAL": "0", "USE_CT": "0", "USE_CTR": "0", "USE_OAH": "1", "USE_OCH": "1",
             "RERANK_SEEDS": "42,7,2024,11,99,5", "RERANK_CV_ONLY": "1",
-            "RERANK_IN": "submission_repro_base.csv", "PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1"}
+            "RERANK_IN": "submissions/tarik_v55_best.csv", "PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1"}
+# REPO NOTE: RERANK_IN was "submission_repro_base.csv", a file of the competition tree that no
+# stage here writes. The harness takes only risk and behaviour from it, and stage 534 replaces
+# both with v55's text, so v55 itself - present with or without the base phase - is the input.
 PROTOCOLS = {"full": ("532_mil_full_nested_s{seed}.parquet", -1),
              "holdout": ("532_mil_inner_s{seed}.parquet+532_mil_holdout_s{seed}.parquet", HOLDOUT_FOLD)}
 
