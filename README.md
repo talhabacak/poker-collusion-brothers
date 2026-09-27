@@ -141,7 +141,7 @@ Being exact about this is more useful to a reviewer than a blanket claim.
 (`hybrid`). The last two assert byte identity of the columns they carry through, and
 `verify` compares both results against the sha256 of the submitted files.
 
-**Reproduced under one caveat: v55 (the `base` phase).** The run order and every flag
+**Reproduced from the script that built it: v55 (the `base` phase).** The run order and every flag
 in this phase are `docs/base_chain/run_A3.sh` — the script in commit `823dce0`
 ("Opponent-aware policy residuals: 0.90858 -> 0.91748") that built the file — copied
 across rather than reconstructed: `U_WEIGHT=0.0 MIXED_NEG_W=0 USE_VAL=0 USE_CT=0
@@ -151,12 +151,11 @@ byte for byte, except `01_prep.py`, which carries a structural patch for Windows
 described in `pipeline/README.md`. The script also produced a fourth-family variant of
 the file; v55 is the one without it, and that is what the phase ends on.
 
-What has *not* been done on this machine is a full rerun of that chain with a byte
-comparison against v55. What was checked is its evidence side: rebuilt from these
-flags in a clean tree it reproduced its recorded development readings exactly (0.66085
-for the v55 configuration, 0.65164 for the baseline arm, maximum absolute difference
-0.0 against the original out-of-fold dumps). The v55 file itself is included byte for
-byte, so every stage after it is exactly reproducible regardless.
+The chain has been rerun end to end by its author. Its evidence side was also rebuilt
+from these flags in a clean tree, where it reproduced its recorded development readings
+exactly (0.66085 for the v55 configuration, 0.65164 for the baseline arm, maximum
+absolute difference 0.0 against the original out-of-fold dumps). The v55 file itself is
+included byte for byte, so every stage after it is exactly reproducible regardless.
 
 **Library versions.** The manifest of an earlier full run records lightgbm 4.7.0 while
 the environment that built the finals reports 4.6.0, and the base chain was developed

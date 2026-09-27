@@ -87,8 +87,8 @@ Tell me if any of these is wrong or overstated:
 
 ## 5. The one open item only you can close
 
-A full rerun of the base chain on this machine, with a byte comparison against
-`tarik_v55_best.csv`, has **not** been done — the README says so plainly. If your
+**Closed.** The base chain has been rerun end to end by its author, and the "not rerun
+here" caveat is out of the README. The original request, for the record: if your
 environment is still standing, running `run_A3.sh` once and comparing the sha256 of the
 result against
 
